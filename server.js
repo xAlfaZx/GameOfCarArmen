@@ -24,7 +24,7 @@ ToxicGrass = require("./ToxicGrass")
 Water = require("./Water")
 Wolf = require("./Wolf")
 
-var n = 50;
+var n = 25;
 matrix = [];
 
 function rand(min, max) {
@@ -103,7 +103,13 @@ io.sockets.emit("send matrix", matrix)
           }
            else if (matrix[y][x] == 5)
            {
-             WaterArr.push(new Water(x, y));
+             let randomJur = Math.floor(rand(0, 100))
+             if (randomJur == 5)
+             {
+              WaterArr.push(new Water(x, y));
+             }
+             else matrix[y][x] == 1;
+             grassArr.push(new Grass(x, y));
            }
         }
       }
@@ -135,6 +141,44 @@ io.sockets.emit("send matrix", matrix)
     //մեր խաղի շարժը լինելու է 1 վարկյանը մեկ
     setInterval(game, 1000)
 
+    function kill() {
+     grassArr = [];
+     eaterArr = [];
+     toxicGrassArr = [];
+     WolfArr = [];
+     WaterArr = [];
+      for (var y = 0; y < matrix.length; y++) {
+          for (var x = 0; x < matrix[y].length; x++) {
+              matrix[y][x] = 0;
+          }
+      }
+      io.sockets.emit("send matrix", matrix);
+  }
+  
+  
+  function addGrass() {
+      for (var i = 0; i < 7; i++) {
+      var x = Math.floor(Math.random() * matrix[0].length)
+      var y = Math.floor(Math.random() * matrix.length)
+          if (matrix[y][x] == 0) {
+              matrix[y][x] = 1
+              var gr = new Grass(x, y, 1)
+              grassArr.push(gr)
+          }
+      }
+      io.sockets.emit("send matrix", matrix);
+  }
+  function addGrassEater() {
+      for (var i = 0; i < 7; i++) {   
+      var x = Math.floor(Math.random() * matrix[0].length)
+      var y = Math.floor(Math.random() * matrix.length)
+          if (matrix[y][x] == 0) {
+              matrix[y][x] = 2
+              eaterArr.push(new Eater(x, y, 2))
+          }
+      }
+      io.sockets.emit("send matrix", matrix);
+  }
 
 
       // մինչև այժմ մենք ինքներս էինք դնում իվենթների անուննները,
@@ -143,22 +187,26 @@ io.sockets.emit("send matrix", matrix)
       //երբ որևէ մեկը աշխատացնում է սերվերը՝ մտնում է սերվեր
       //և մենք դեռ չէինք կանչել createObject ֆունկցիան
       // էստեղ կկանչենք )))
-io.on('connection', function (socket) {
-    createObject();
-})
+      io.on('connection', function (socket) {
+        createObject();
+        socket.on("kill", kill);
+        socket.on("add grass", addGrass);
+        socket.on("add grassEater", addGrassEater);
+    });
+    
 
 var statistics = {};
 
-// setInterval(function() {
-//   statistics.Grass_CLass = grassArr.length;
-//   statistics.Eater = eaterArr.length;
-//   statistics.ToxicGrass = ToxicGrass.length;
-//   //statistics.Water = Water.length;
-//   statistics.Wolf = Wolf.length;
-//   fs.writeFile("statistics.json", JSON.stringify(statistics), function(){
-//       console.log("send")
-//   })
-// },1000)
+setInterval(function() {
+  statistics.Grass_CLass = grassArr.length;
+  statistics.Eater = eaterArr.length;
+  statistics.ToxicGrass = ToxicGrass.length;
+  //statistics.Water = Water.length;
+  statistics.Wolf = Wolf.length;
+  fs.writeFile("statistics.json", JSON.stringify(statistics), function(){
+      console.log("send")
+  })
+},1000)
 //դե ինչ այսօր այսքանը:
 
 //ինձ համար շատ կարևոր է , որ հենց դու շատ լավ հասկանաս էս
